@@ -6,6 +6,7 @@ export default defineNuxtConfig({
     '@nuxt/ui-pro',
     '@nuxtjs/mdc',
     '@sandros94/lab',
+    '@vueuse/nuxt',
   ],
 
   devtools: { enabled: true },

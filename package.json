@@ -23,6 +23,7 @@
     "@nuxt/ui": "https://pkg.pr.new/@nuxt/ui@6a81db2",
     "@nuxt/ui-pro": "https://pkg.pr.new/@nuxt/ui-pro@a266bc4",
     "@nuxtjs/mdc": "^0.12.1",
+    "@vueuse/nuxt": "12.3.0",
     "eslint": "^9.17.0",
     "nuxt": "^3.15.1",
     "typescript": "^5.7.2",
