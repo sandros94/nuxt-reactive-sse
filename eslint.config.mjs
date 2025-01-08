@@ -17,6 +17,7 @@ export default withNuxt(
       }],
 
       // Project specific overrides
+      'vue/multi-word-component-names': 'off',
     },
   },
 )
