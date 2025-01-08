@@ -2,7 +2,6 @@
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui',
     '@nuxt/ui-pro',
     '@nuxtjs/mdc',
     '@sandros94/lab',
@@ -18,6 +17,8 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
   },
+
+  compatibilityDate: '2025-01-08',
 
   eslint: {
     config: {

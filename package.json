@@ -20,7 +20,6 @@
   "devDependencies": {
     "@nuxt/devtools": "^1.7.0",
     "@nuxt/eslint": "^0.7.4",
-    "@nuxt/ui": "https://pkg.pr.new/@nuxt/ui@6a81db2",
     "@nuxt/ui-pro": "https://pkg.pr.new/@nuxt/ui-pro@a266bc4",
     "@nuxtjs/mdc": "^0.12.1",
     "@vueuse/nuxt": "12.3.0",
