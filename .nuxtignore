@@ -1,0 +1,25 @@
+# .nuxtignore v1.2.0
+# https://gist.github.com/Sandros94/7f3dc1539c8f5905c495aa1bb417589c
+
+
+# Docker
+docker*
+
+# Local env files
+*.env
+!.env
+.env.example
+!.env.*
+
+# VSCode
+.vscode
+.devcontainer
+
+# Misc
+.DS_Store
+.AppleDouble
+.LSOverride
+.fleet
+.idea
+
+# Project specific
