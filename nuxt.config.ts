@@ -27,7 +27,9 @@ export default defineNuxtConfig({
   },
 
   lab: {
-    kv: true,
+    kv: {
+      ttl: 10 * 60 * 60,
+    },
     zlib: true,
   },
 })
