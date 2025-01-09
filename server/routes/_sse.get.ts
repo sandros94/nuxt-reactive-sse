@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
 })
 
 // `useKV` is based on Nuxt's `CACHE`
-const DEFAULT_BASE = /^CACHE:sse:/
-const d = (key: string) => key.match(DEFAULT_BASE)
-  ? key.replace(DEFAULT_BASE, '')
+const DEFAULT_GLOBAL_BASE = /^CACHE:sse:/
+const d = (key: string) => key.match(DEFAULT_GLOBAL_BASE)
+  ? key.replace(DEFAULT_GLOBAL_BASE, '')
   : null
