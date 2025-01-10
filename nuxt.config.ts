@@ -20,6 +20,12 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2025-01-08',
 
+  nitro: {
+    experimental: {
+      websocket: true,
+    },
+  },
+
   eslint: {
     config: {
       stylistic: true,
