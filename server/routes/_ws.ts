@@ -2,10 +2,7 @@ import type { PublicRuntimeConfig } from '@nuxt/schema'
 import type { Peer, Hooks, Message } from 'crossws'
 import { getQuery } from 'ufo'
 
-import { merge } from '#lab/utils'
-
 export default useWebSocketHandler({
-  channels: ['updates'],
   async open(peer, { channels, config }) {
     config.channels.defaults.forEach(channel => peer.subscribe(channel))
     for (const channel of channels) {
@@ -51,18 +48,11 @@ export default useWebSocketHandler({
   },
 })
 
-interface WSChannels {
-  internal: PublicRuntimeConfig['ws']['channels']['internal']
-  defaults: PublicRuntimeConfig['ws']['channels']['defaults']
-}
-
-interface WSConfig {
-  channels: WSChannels
-}
+type WSConfig = PublicRuntimeConfig['ws']
 
 type MaybePromise<T> = T | Promise<T>
 // TODO: add to each hook a merged runtimeConfig
-interface _Hooks extends Partial<Omit<Hooks, 'open' | 'close' | 'message'>> {
+interface WSHooks extends Partial<Omit<Hooks, 'open' | 'close' | 'message'>> {
   /** A socket is opened */
   open: (peer: Peer, config: { channels: string[], config: WSConfig }) => MaybePromise<void>
 
@@ -76,26 +66,12 @@ interface _Hooks extends Partial<Omit<Hooks, 'open' | 'close' | 'message'>> {
   }, config: { channels: string[], config: WSConfig }) => MaybePromise<void>
 }
 
-interface WSHooks extends Partial<_Hooks> {
-  channels?: string[]
-}
-
-export function useWebSocketHandler(options: WSHooks) {
+export function useWebSocketHandler(options: Partial<WSHooks>) {
   let config: WSConfig
 
   const getConfig = () => {
     if (config) return config
-    const runtimeConfig = useRuntimeConfig().public.ws
-
-    config = {
-      channels: {
-        internal: runtimeConfig.channels.internal,
-        defaults: options.channels !== undefined
-          ? merge(runtimeConfig.channels.defaults, options.channels)
-          : runtimeConfig.channels.defaults,
-      },
-    }
-    return config
+    return config = useRuntimeConfig().public.ws
   }
 
   // TODO: get runtimeConfig channels and merge them with defaultChannels
