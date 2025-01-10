@@ -5,10 +5,9 @@ export default defineEventHandler(async (event) => {
       { global: randomUUID() },
     ),
   )
+  const _body = Object.keys(body)
+    .map(key => ({ type: key, data: body[key] }))
 
-  for (const item in body) {
-    await useKV('sse').setItem(item, body[item])
-  }
-
+  wsHooks.callHookParallel('notifications', ..._body)
   return { success: true }
 })

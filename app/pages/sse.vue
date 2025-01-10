@@ -1,6 +1,7 @@
 <template>
   <UContainer>
     <UButton to="/" label="Home" variant="link" />
+    <UButton to="/ws" label="WS" variant="link" />
     <UCard class="mt-10">
       <UAlert
         v-if="error"
