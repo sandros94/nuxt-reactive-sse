@@ -6,6 +6,7 @@ export default defineNuxtConfig({
     '@nuxtjs/mdc',
     '@sandros94/lab',
     '@vueuse/nuxt',
+    'nuxt-auth-utils',
   ],
 
   devtools: { enabled: true },
