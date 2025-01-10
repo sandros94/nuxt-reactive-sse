@@ -36,6 +36,24 @@
         <UCard>
           <p>Status: {{ status }}</p>
           <p>Updates</p>
+          <ProsePre>
+            <ProseCode v-if="chat">
+              {{ JSON.stringify(chat, null, 2) }}
+            </ProseCode>
+            <br>
+            <ProseCode v-if="test2">
+              {{ JSON.stringify(test2, null, 2) }}
+            </ProseCode>
+            <br>
+            <ProseCode v-if="notifications">
+              {{ JSON.stringify(notifications, null, 2) }}
+            </ProseCode>
+            <br>
+            <ProseCode v-if="_internal">
+              {{ JSON.stringify(_internal, null, 2) }}
+            </ProseCode>
+            <br>
+          </ProsePre>
           <ProseUl>
             <ProseLi v-for="(item, index) of history" :key="index">
               <code>{{ item }}</code><br>
@@ -48,49 +66,24 @@
 </template>
 
 <script setup lang="ts">
-import { joinURL, withProtocol, withQuery } from 'ufo'
-import { safeDestr } from 'destr'
-
 const items = ['notifications', 'chat', 'test:2']
 const channels = ref<string[]>(['notifications'])
 const menuOpen = ref(false)
 
-const reqUrl = useRequestURL()
-const _url = reqUrl.protocol === 'https:'
-  ? withProtocol(joinURL(reqUrl.origin, '_ws'), 'wss://')
-  : withProtocol(joinURL(reqUrl.origin, '_ws'), 'ws://')
-const url = computed(() => {
-  return withQuery(_url, { channels: channels.value })
-})
-const { status, data, send, open, close } = useWebSocket(url, {
-  onMessage(_, message) {
-    logger.info('message', message.data)
-  },
-  autoConnect: false,
-})
-
-const urlBuffer = ref<string>()
-watch(
-  menuOpen,
-  (isOpen) => {
-    if (isOpen) {
-      urlBuffer.value = url.value
-      return
-    }
-    else if (!isOpen && urlBuffer.value !== url.value) {
-      close()
-      setTimeout(() => open(), 100)
-      urlBuffer.value = undefined
-    }
-  },
-  { immediate: false },
-)
+const { states, data, status, send, open } = useReactiveWS<{
+  'chat': string
+  'test:2': string
+  'notifications': string
+  '_internal': {
+    channels: string[]
+    message?: string
+  }
+}>(channels)
+const { chat, 'test:2': test2, notifications, _internal } = states
 
 const history = ref<string[]>([])
 watch(data, (newValue) => {
-  const parsed = safeDestr<{ channel: string, data: any } | string>(newValue)
-  if (typeof parsed === 'string') return history.value.push(`server: ${parsed}`)
-  else history.value.push(`${parsed.channel}: ${JSON.stringify(parsed.data)}`)
+  history.value.push(`server: ${newValue}`)
 })
 
 const message = ref<string>('')

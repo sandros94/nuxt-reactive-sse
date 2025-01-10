@@ -4,7 +4,7 @@ import { createHooks } from 'hookable'
 export { randomUUID } from 'uncrypto'
 
 type InternalChannels = PublicRuntimeConfig['ws']['channels']['internal'][number]
-type AllChannels = PublicRuntimeConfig['ws']['channels']['defaults'][number] | InternalChannels
+type AllChannels = PublicRuntimeConfig['ws']['channels']['available'][number] | InternalChannels
 
 type WSMessage<D extends AllChannels = AllChannels, T = unknown> = {
   channel: D

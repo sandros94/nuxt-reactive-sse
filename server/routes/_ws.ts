@@ -4,7 +4,7 @@ import { getQuery } from 'ufo'
 
 export default useWebSocketHandler({
   async open(peer, { channels, config }) {
-    config.channels.defaults.forEach(channel => peer.subscribe(channel))
+    config.channels.available.forEach(channel => peer.subscribe(channel))
     for (const channel of channels) {
       peer.subscribe(channel)
       const data = await useKV('ws').getItem(channel)
@@ -40,8 +40,10 @@ export default useWebSocketHandler({
       channel,
       JSON.stringify({
         channel,
-        from: peer.id,
-        data,
+        data: {
+          ...data,
+          from: peer.id,
+        },
       }),
       { compress: true },
     )
@@ -90,13 +92,12 @@ export function useWebSocketHandler(options: Partial<WSHooks>) {
 
       // Setup notification hooks
       wsHooks.hook('all', (...messages) => {
-        for (const { channel, from, data } of messages) {
+        for (const { channel, data } of messages) {
           wsPublishToAll(
             peer,
             channel,
             JSON.stringify({
               channel,
-              from: from || 'server',
               data,
             }),
             { compress: true },
@@ -104,14 +105,13 @@ export function useWebSocketHandler(options: Partial<WSHooks>) {
         }
       })
       wsHooks.hook('internal', (...messages) => {
-        for (const { channel, from, data } of messages) {
+        for (const { channel, data } of messages) {
           if (!config.channels.internal.includes(channel)) return
           wsPublishToAll(
             peer,
             channel,
             JSON.stringify({
               channel,
-              from: from || 'server',
               data,
             }),
             { compress: true },
@@ -131,7 +131,7 @@ export function useWebSocketHandler(options: Partial<WSHooks>) {
       // TODO: is it really needed to unsubscribe from all channels?
       const config = getConfig()
       const channels = getWSChannels(peer.websocket.url)
-      const _channels = [...config.channels.defaults, ...config.channels.internal, ...channels]
+      const _channels = [...config.channels.available, ...config.channels.internal, ...channels]
       _channels.forEach(c => peer.unsubscribe(c))
 
       logger.info('`ws [close]`:', peer.id)
