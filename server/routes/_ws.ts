@@ -5,7 +5,7 @@ const DEFAULT_KV_BASE = 'ws'
 
 export default defineWebSocketHandler({
   async open(peer) {
-    peer.subscribe('system')
+    peer.subscribe('_internal')
     const kv = useKV(DEFAULT_KV_BASE)
     const channels = getChannels(peer.websocket.url)
 
@@ -18,7 +18,7 @@ export default defineWebSocketHandler({
     logger.info('`ws [open]`:', peer.id)
     if (channels.length > 0)
       peer.send(JSON.stringify({
-        type: 'system',
+        channel: '_internal',
         data: {
           channels,
           message: `Subscribed to: "${channels.join().replace(/,/g, ', ')}"`,
@@ -26,7 +26,7 @@ export default defineWebSocketHandler({
       }))
     else
       peer.send(JSON.stringify({
-        type: 'system',
+        channel: '_internal',
         data: {
           message: 'No channels subscribed',
         },
@@ -34,22 +34,22 @@ export default defineWebSocketHandler({
 
     wsHooks.hook('notifications', (...messages) => {
       for (const message of messages) {
-        publishToAll(peer, message.type, message, { compress: true })
+        publishToAll(peer, message.channel, message, { compress: true })
       }
     })
   },
 
   async message(peer, message) {
     const channels = getChannels(peer.websocket.url)
-    const validated = v.safeParse(v.object({ type: v.picklist(channels), data: v.any() }), message.json())
+    const validated = v.safeParse(v.object({ channel: v.picklist(channels), data: v.any() }), message.json())
     if (validated.success) {
       logger.info('`ws [message]`:', peer.id, message.text())
-      peer.publish(validated.output.type, JSON.stringify(validated.output), { compress: true })
+      peer.publish(validated.output.channel, JSON.stringify(validated.output), { compress: true })
     }
   },
 
   async close(peer) {
-    peer.unsubscribe('system')
+    peer.unsubscribe('_internal')
     const channels = getChannels(peer.websocket.url)
     channels.forEach((channel) => {
       peer.unsubscribe(channel)

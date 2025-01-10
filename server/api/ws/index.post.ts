@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
     ),
   )
   const _body = Object.keys(body)
-    .map(key => ({ type: key, data: body[key] }))
+    .map(key => ({ channel: key, data: body[key] }))
 
   wsHooks.callHookParallel('notifications', ..._body)
   return { success: true }

@@ -49,6 +49,7 @@
 
 <script setup lang="ts">
 import { joinURL, withProtocol, withQuery } from 'ufo'
+import { safeDestr } from 'destr'
 
 const items = ['notifications', 'chat', 'test:2']
 const channels = ref<string[]>(['notifications'])
@@ -87,7 +88,9 @@ watch(
 
 const history = ref<string[]>([])
 watch(data, (newValue) => {
-  history.value.push(`server: ${newValue}`)
+  const parsed = safeDestr<{ channel: string, data: any } | string>(newValue)
+  if (typeof parsed === 'string') return history.value.push(`server: ${parsed}`)
+  else history.value.push(`${parsed.channel}: ${JSON.stringify(parsed.data)}`)
 })
 
 const message = ref<string>('')
@@ -95,7 +98,7 @@ function sendData() {
   if (status.value !== 'OPEN' || !channels.value.includes('chat')) return
   history.value.push(`client: ${message.value}`)
   send(JSON.stringify({
-    type: 'chat',
+    channel: 'chat',
     data: {
       message: message.value,
     },
