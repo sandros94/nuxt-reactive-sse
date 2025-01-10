@@ -68,9 +68,8 @@ export function useReactiveWS<T extends Record<string, any>>(channels: MaybeRefO
     })
 
   watch(data, (newValue) => {
-    // TODO: use proper type interface
     const parsed = safeDestr<WSMessage<T> | string>(newValue)
-    if (typeof parsed === 'string') return logger.log('`[useReactiveWS]`', parsed)
+    if (typeof parsed === 'string') return logger.log('`[useReactiveWS]` parsed a string:', parsed)
     states[parsed.channel].value = parsed.data
   })
 
