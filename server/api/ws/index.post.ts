@@ -1,13 +1,11 @@
 export default defineEventHandler(async (event) => {
   const body = await useValidatedBody(event,
     v.optional(
-      v.record(v.string(), v.optional(v.string(), randomUUID())),
-      { global: randomUUID() },
+      v.object({ channel: v.string(), data: v.optional(v.any(), randomUUID()) }),
+      { channel: '_internal', data: randomUUID() },
     ),
   )
-  const _body = Object.keys(body)
-    .map(key => ({ channel: key, data: body[key] }))
 
-  wsHooks.callHookParallel('notifications', ..._body)
+  wsHooks.callHookParallel('all', body)
   return { success: true }
 })

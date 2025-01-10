@@ -15,6 +15,17 @@ export default defineNuxtConfig({
     'assets/css/main.css',
   ],
 
+  runtimeConfig: {
+    public: {
+      ws: {
+        channels: {
+          internal: ['_internal'] as const,
+          defaults: ['notifications'] as const,
+        },
+      },
+    },
+  },
+
   future: {
     compatibilityVersion: 4,
   },
