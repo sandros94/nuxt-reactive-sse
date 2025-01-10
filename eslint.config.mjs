@@ -18,6 +18,7 @@ export default withNuxt(
 
       // Project specific overrides
       'vue/multi-word-component-names': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 )
