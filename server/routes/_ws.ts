@@ -4,27 +4,33 @@ import { getQuery } from 'ufo'
 
 export default useWebSocketHandler({
   async open(peer, { channels, config }) {
-    config.channels.defaults.forEach(channel => peer.subscribe(channel))
-    for (const channel of channels) {
+    for (const channel of [...channels, ...config.channels.defaults]) {
       peer.subscribe(channel)
       const data = await useKV('ws').getItem(channel)
       if (data)
         peer.send(JSON.stringify(data), { compress: true })
     }
 
-    // Send connection status
+    // Send _internal status
     const activeChannels = Array.from(peer['_topics'])
     peer.send(JSON.stringify({
       channel: '_internal',
       data: {
         channels: activeChannels,
         message: activeChannels.length
-          ? `Subscribed to: "${activeChannels.join(', ')}"`
-          : 'No channels subscribed',
+          ? `Subscribed to ${activeChannels.length} channels`
+          : 'Not subscribed to any channel',
       },
-    }))
+    }), { compress: true })
+
+    // Send session metadata
+    const data = JSON.stringify({ channel: 'session', data: { users: peer.peers.size } })
+    peer.send(data, { compress: true })
+    peer.publish('session', data, { compress: true })
+
+    logger.info('`ws [open]`:', peer.id)
   },
-  message(peer, message, { config }) {
+  message(peer, message) {
     const parsedMessage = v.safeParse(
       v.object({
         channel: v.string(),
@@ -33,7 +39,6 @@ export default useWebSocketHandler({
       message.json(),
     )
     if (!parsedMessage.success) return
-    if (config.channels.internal.includes(parsedMessage.output.channel)) return
 
     const { channel, data } = parsedMessage.output
     peer.publish(
@@ -44,6 +49,11 @@ export default useWebSocketHandler({
       }),
       { compress: true },
     )
+  },
+  close(peer) {
+    peer.publish('session', JSON.stringify({ channel: 'session', data: { users: peer.peers.size } }), { compress: true })
+
+    logger.info('`ws [close]`:', peer.id)
   },
 })
 
@@ -81,8 +91,9 @@ export function useWebSocketHandler(options: Partial<WSHooks>) {
     async open(peer) {
       const config = getConfig()
 
-      // Automatically subscribe to internal channels
+      // Automatically subscribe to internal and default channels
       config.channels.internal.forEach(channel => peer.subscribe(channel))
+      config.channels.defaults.forEach(channel => peer.subscribe(channel))
 
       // Get channels
       const channels = getWSChannels(peer.websocket.url)
@@ -119,19 +130,20 @@ export function useWebSocketHandler(options: Partial<WSHooks>) {
       return options.open?.(peer, { channels, config })
     },
 
-    message: (peer, message) => options.message?.(peer, message, {
-      channels: getWSChannels(peer.websocket.url),
-      config: getConfig(),
-    }),
+    message(peer, message) {
+      const config = getConfig()
+      const m = message.json<any>()
+      if (m?.channel && config.channels.internal.includes(m.channel)) return
+      const channels = getWSChannels(peer.websocket.url)
+
+      return options.message?.(peer, message, { channels, config })
+    },
 
     async close(peer, details) {
       // TODO: is it really needed to unsubscribe from all channels?
       const config = getConfig()
       const channels = getWSChannels(peer.websocket.url)
-      const _channels = [...config.channels.defaults, ...config.channels.internal, ...channels]
-      _channels.forEach(c => peer.unsubscribe(c))
 
-      logger.info('`ws [close]`:', peer.id)
       return options.close?.(peer, details, { channels, config })
     },
 

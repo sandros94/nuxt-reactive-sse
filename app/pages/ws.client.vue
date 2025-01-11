@@ -41,8 +41,8 @@
               {{ JSON.stringify(states['chat'].value, null, 2) }}
             </ProseCode>
             <br>
-            <ProseCode v-if="states['notifications']">
-              {{ JSON.stringify(states['notifications'].value, null, 2) }}
+            <ProseCode v-if="states['session']">
+              {{ JSON.stringify(states['session'].value, null, 2) }}
             </ProseCode>
             <br>
             <ProseCode v-if="states['_internal']">
@@ -64,8 +64,8 @@
 <script setup lang="ts">
 import { randomUUID } from 'uncrypto'
 
-const items = ['notifications', 'chat']
-const channels = ref<string[]>(['notifications'])
+const items = ['session', 'chat']
+const channels = ref<string[]>(['session'])
 const menuOpen = ref(false)
 
 // just for demo purposes, should be done server-side
@@ -74,6 +74,9 @@ const userID = randomUUID()
 const { states, data, status, send, open } = useWS<{
   chat: {
     [key: string]: string
+  }
+  session: {
+    users: number
   }
   notifications: {
     message: string
