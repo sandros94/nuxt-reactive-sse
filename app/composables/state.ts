@@ -1,5 +1,5 @@
-import type { Ref, MaybeRefOrGetter } from '#imports'
-import { useState, toValue } from '#imports'
+import type { Ref, MaybeRef } from '#imports'
+import { toRef, watch, useState } from '#imports'
 
 // Type helper for state object with specific value types per key
 type StateObject<T extends Record<string, any>> = {
@@ -13,23 +13,28 @@ type StateObject<T extends Record<string, any>> = {
  * @returns Object containing reactive states for each key
  */
 export function useMultiState<T extends Record<string, any>>(
-  keys: MaybeRefOrGetter<keyof T | Array<keyof T>>,
+  keys: MaybeRef<Array<keyof T>>,
   options?: {
     prefix?: string
   },
 ): StateObject<T> {
   const states = {} as StateObject<T>
-  const k = toValue(keys)
-  const _keys = Array.isArray(k) ? k : [k]
+  const _keys = toRef(keys) as Ref<Array<keyof T>>
 
-  for (const key of _keys) {
-    states[key] = useState<T[typeof key] | undefined>(
-      options?.prefix
-        ? `${options.prefix}-${String(key)}`
-        : String(key),
-      () => undefined,
-    )
-  }
+  watch(_keys, (newKeys) => {
+    for (const key of newKeys) {
+      if (!key || typeof key !== 'string') {
+        throw new TypeError('[useMultiState] key must be a string: ' + String(key))
+      }
+
+      states[key as keyof T] = useState<T[typeof key] | undefined>(
+        options?.prefix
+          ? `${options.prefix}-${String(key)}`
+          : String(key),
+        () => undefined,
+      )
+    }
+  }, { immediate: true })
 
   return states
 }
