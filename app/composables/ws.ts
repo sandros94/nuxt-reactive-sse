@@ -37,9 +37,6 @@ export function useWS<T extends Record<string, any>>(channels: MaybeRefOrGetter<
   })
 
   const mergedChannels = computed(() => merge(wsConfig.channels.internal, [...wsConfig.channels.defaults, ..._channels.value]))
-  watchEffect(() => {
-    logger.log('[useWS] mergedChannels:', mergedChannels.value)
-  })
   const states = useWSState<T>(mergedChannels, { prefix: stateKeyPrefix })
 
   const _query = reactive({
