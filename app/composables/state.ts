@@ -2,7 +2,7 @@ import type { Ref, MaybeRef } from '#imports'
 import { toRef, watch, useState } from '#imports'
 
 // Type helper for state object with specific value types per key
-type StateObject<T extends Record<string, any>> = {
+export type StateObject<T extends Record<string, any>> = {
   [K in keyof T]: Ref<T[K] | undefined>
 }
 
