@@ -1,13 +1,13 @@
 import type { UseWebSocketOptions } from '@vueuse/core'
 import { joinURL, withProtocol, withQuery } from 'ufo'
-import { safeDestr } from 'destr'
+import { destr } from 'destr'
 
 import type { MaybeRefOrGetter } from '#imports'
 import { toRef, useMultiState } from '#imports'
 import { merge } from '#lab/utils'
 
 const stateKeyPrefix = ':ws:'
-const reservedChannels = ['data', 'status', 'send', 'open', 'close', 'ws']
+const reservedChannels = ['data', 'status', 'send', '_send', 'open', 'close', 'ws']
 
 interface WSConfig extends UseWebSocketOptions {
   query?: Record<string, any>
@@ -18,8 +18,10 @@ interface WSMessage<T extends Record<string, any>> {
   data: T[keyof T]
 }
 
+export const useWSState = useMultiState
+
 // TODO: add runtimeConfig channel types for auto-completion
-export function useReactiveWS<T extends Record<string, any>>(channels: MaybeRefOrGetter<string[]>, options?: WSConfig) {
+export function useWS<T extends Record<string, any>>(channels: MaybeRefOrGetter<string[]>, options?: WSConfig) {
   const wsConfig = useRuntimeConfig().public.ws
   const { query, ...opts } = options || {}
   const _channels = toRef(channels)
@@ -28,22 +30,22 @@ export function useReactiveWS<T extends Record<string, any>>(channels: MaybeRefO
   _channels.value.forEach((channel) => {
     if (reservedChannels.includes(channel))
       throw createError({
-        message: `[useReactiveWS] Channel name "${channel}" is reserved`,
+        message: `[useWS] Channel name "${channel}" is reserved`,
         status: 400,
         fatal: true,
       })
   })
 
-  const mergedChannels = computed(() => merge(wsConfig.channels.internal, _channels.value))
+  const mergedChannels = computed(() => merge(wsConfig.channels.internal, [...wsConfig.channels.defaults, ..._channels.value]))
   watchEffect(() => {
-    logger.log('[useReactiveWS] mergedChannels:', mergedChannels.value)
+    logger.log('[useWS] mergedChannels:', mergedChannels.value)
   })
-  const states = useMultiState<T>(mergedChannels, { prefix: stateKeyPrefix })
+  const states = useWSState<T>(mergedChannels, { prefix: stateKeyPrefix })
+
   const _query = reactive({
     ...query,
     channels: _channels,
   })
-
   const reqUrl = useRequestURL()
   const path = joinURL(reqUrl.origin, wsConfig.path)
   const url = computed(() => {
@@ -55,17 +57,28 @@ export function useReactiveWS<T extends Record<string, any>>(channels: MaybeRefO
     )
   })
 
-  const { status, data, send, open, close, ws } = useWebSocket(url, {
+  const {
+    status,
+    data,
+    send: _send,
+    open,
+    close,
+    ws,
+  } = useWebSocket(url, {
     ...opts,
     onMessage(_, message) {
-      const parsed = safeDestr<WSMessage<T> | string>(message.data)
-      if (typeof parsed === 'string') return logger.log('`[useReactiveWS]` parsed a string:', parsed)
-      states[parsed.channel].value = parsed.data
+      const parsed = destr<WSMessage<T>>(message.data)
+      if (!!parsed && typeof parsed === 'object' && 'channel' in parsed && 'data' in parsed)
+        states[parsed.channel].value = parsed.data
 
       opts?.onMessage?.(_, message)
     },
     autoConnect: false,
   })
+
+  function send<_T extends WSMessage<T>>(channel: _T['channel'], data: _T['data']) {
+    return _send(JSON.stringify({ channel, data }))
+  }
 
   if (opts?.autoConnect !== false)
     watch(url, () => {
@@ -78,6 +91,7 @@ export function useReactiveWS<T extends Record<string, any>>(channels: MaybeRefO
     data,
     status,
     send,
+    _send,
     open,
     close,
     ws,

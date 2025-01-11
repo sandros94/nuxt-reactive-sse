@@ -21,7 +21,7 @@ export default defineNuxtConfig({
         path: '_ws',
         channels: {
           internal: ['_internal'] as const,
-          available: ['notifications'] as const,
+          defaults: ['notifications'] as const,
         },
       },
     },

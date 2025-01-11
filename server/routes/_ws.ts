@@ -4,7 +4,7 @@ import { getQuery } from 'ufo'
 
 export default useWebSocketHandler({
   async open(peer, { channels, config }) {
-    config.channels.available.forEach(channel => peer.subscribe(channel))
+    config.channels.defaults.forEach(channel => peer.subscribe(channel))
     for (const channel of channels) {
       peer.subscribe(channel)
       const data = await useKV('ws').getItem(channel)
@@ -40,10 +40,7 @@ export default useWebSocketHandler({
       channel,
       JSON.stringify({
         channel,
-        data: {
-          ...data,
-          from: peer.id,
-        },
+        data,
       }),
       { compress: true },
     )
@@ -131,7 +128,7 @@ export function useWebSocketHandler(options: Partial<WSHooks>) {
       // TODO: is it really needed to unsubscribe from all channels?
       const config = getConfig()
       const channels = getWSChannels(peer.websocket.url)
-      const _channels = [...config.channels.available, ...config.channels.internal, ...channels]
+      const _channels = [...config.channels.defaults, ...config.channels.internal, ...channels]
       _channels.forEach(c => peer.unsubscribe(c))
 
       logger.info('`ws [close]`:', peer.id)

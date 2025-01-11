@@ -41,10 +41,6 @@
               {{ JSON.stringify(states['chat'].value, null, 2) }}
             </ProseCode>
             <br>
-            <ProseCode v-if="states['test:2']">
-              {{ JSON.stringify(states['test:2'].value, null, 2) }}
-            </ProseCode>
-            <br>
             <ProseCode v-if="states['notifications']">
               {{ JSON.stringify(states['notifications'].value, null, 2) }}
             </ProseCode>
@@ -66,15 +62,23 @@
 </template>
 
 <script setup lang="ts">
-const items = ['notifications', 'chat', 'test:2']
+import { randomUUID } from 'uncrypto'
+
+const items = ['notifications', 'chat']
 const channels = ref<string[]>(['notifications'])
 const menuOpen = ref(false)
 
-const { states, data, status, send, open } = useReactiveWS<{
-  'chat': string
-  'test:2': string
-  'notifications': string
-  '_internal': {
+// just for demo purposes, should be done server-side
+const userID = randomUUID()
+
+const { states, data, status, send, open } = useWS<{
+  chat: {
+    [key: string]: string
+  }
+  notifications: {
+    message: string
+  }
+  _internal: {
     channels: string[]
     message?: string
   }
@@ -87,14 +91,15 @@ watch(data, (newValue) => {
 
 const message = ref<string>('')
 function sendData() {
-  if (status.value !== 'OPEN' || !channels.value.includes('chat')) return
-  history.value.push(`client: ${message.value}`)
-  send(JSON.stringify({
-    channel: 'chat',
-    data: {
-      message: message.value,
-    },
-  }))
+  if (!message.value || status.value !== 'OPEN' || !channels.value.includes('chat')) return
+
+  states['chat'].value = {
+    ...states['chat'].value,
+    [userID]: message.value,
+  }
+
+  history.value.push(`client: ${JSON.stringify({ channel: 'chat', data: states['chat'].value })}`)
+  send('chat', states['chat'].value)
   message.value = ''
 }
 </script>
