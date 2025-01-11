@@ -13,9 +13,9 @@ interface WSConfig extends UseWebSocketOptions {
   query?: Record<string, any>
 }
 
-interface WSMessage<T extends Record<string, any>, D = T[keyof T]> {
-  channel: Extract<keyof T, string>
-  data: D
+interface WSMessage<T extends Record<string, any>> {
+  channel: keyof T
+  data: T[keyof T]
 }
 
 // TODO: add runtimeConfig channel types for auto-completion
@@ -35,6 +35,9 @@ export function useReactiveWS<T extends Record<string, any>>(channels: MaybeRefO
   })
 
   const mergedChannels = computed(() => merge(wsConfig.channels.internal, _channels.value))
+  watchEffect(() => {
+    logger.log('[useReactiveWS] mergedChannels:', mergedChannels.value)
+  })
   const states = useMultiState<T>(mergedChannels, { prefix: stateKeyPrefix })
   const _query = reactive({
     ...query,
@@ -55,7 +58,10 @@ export function useReactiveWS<T extends Record<string, any>>(channels: MaybeRefO
   const { status, data, send, open, close, ws } = useWebSocket(url, {
     ...opts,
     onMessage(_, message) {
-      logger.info('message', message.data)
+      const parsed = safeDestr<WSMessage<T> | string>(message.data)
+      if (typeof parsed === 'string') return logger.log('`[useReactiveWS]` parsed a string:', parsed)
+      states[parsed.channel].value = parsed.data
+
       opts?.onMessage?.(_, message)
     },
     autoConnect: false,
@@ -66,12 +72,6 @@ export function useReactiveWS<T extends Record<string, any>>(channels: MaybeRefO
       close()
       setTimeout(() => open(), 100)
     })
-
-  watch(data, (newValue) => {
-    const parsed = safeDestr<WSMessage<T> | string>(newValue)
-    if (typeof parsed === 'string') return logger.log('`[useReactiveWS]` parsed a string:', parsed)
-    states[parsed.channel].value = parsed.data
-  })
 
   return {
     states,

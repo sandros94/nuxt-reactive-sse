@@ -37,20 +37,20 @@
           <p>Status: {{ status }}</p>
           <p>Updates</p>
           <ProsePre>
-            <ProseCode v-if="chat">
-              {{ JSON.stringify(chat, null, 2) }}
+            <ProseCode v-if="states['chat']">
+              {{ JSON.stringify(states['chat'].value, null, 2) }}
             </ProseCode>
             <br>
-            <ProseCode v-if="test2">
-              {{ JSON.stringify(test2, null, 2) }}
+            <ProseCode v-if="states['test:2']">
+              {{ JSON.stringify(states['test:2'].value, null, 2) }}
             </ProseCode>
             <br>
-            <ProseCode v-if="notifications">
-              {{ JSON.stringify(notifications, null, 2) }}
+            <ProseCode v-if="states['notifications']">
+              {{ JSON.stringify(states['notifications'].value, null, 2) }}
             </ProseCode>
             <br>
-            <ProseCode v-if="_internal">
-              {{ JSON.stringify(_internal, null, 2) }}
+            <ProseCode v-if="states['_internal']">
+              {{ JSON.stringify(states['_internal'].value, null, 2) }}
             </ProseCode>
             <br>
           </ProsePre>
@@ -79,7 +79,6 @@ const { states, data, status, send, open } = useReactiveWS<{
     message?: string
   }
 }>(channels)
-const { chat, 'test:2': test2, notifications, _internal } = states
 
 const history = ref<string[]>([])
 watch(data, (newValue) => {
