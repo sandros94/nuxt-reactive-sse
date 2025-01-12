@@ -1,5 +1,5 @@
 import type { Ref, MaybeRef } from '#imports'
-import { toRef, watch, useState } from '#imports'
+import { isRef, watch, useState } from '#imports'
 
 // Type helper for state object with specific value types per key
 export type StateObject<T extends Record<string, any>> = {
@@ -20,22 +20,30 @@ export function useMultiState<T extends Record<string, any>>(
   },
 ): StateObject<T> {
   const states = {} as StateObject<T>
-  const _keys = toRef(keys) as Ref<Array<keyof T>>
 
-  watch(_keys, (newKeys) => {
-    for (const key of newKeys) {
-      if (!key || typeof key !== 'string') {
-        throw new TypeError('[useMultiState] key must be a string: ' + String(key))
-      }
-
-      states[key as keyof T] = useState<T[typeof key] | undefined>(
-        options?.prefix
-          ? `${options.prefix}-${String(key)}`
-          : String(key),
-        () => undefined,
-      )
-    }
-  }, { immediate: true })
+  if (isRef(keys)) {
+    watch(keys, (newKeys) => {
+      getStates(states, newKeys, options?.prefix)
+    }, { immediate: true })
+  }
+  else {
+    getStates(states, keys, options?.prefix)
+  }
 
   return states
+}
+
+function getStates<T extends Record<string, any>>(states: StateObject<T>, keys: Array<keyof T>, prefix?: string) {
+  for (const key of keys) {
+    if (!key || typeof key !== 'string') {
+      throw new TypeError('[useMultiState] key must be a string: ' + String(key))
+    }
+
+    states[key as keyof T] = useState<T[typeof key] | undefined>(
+      prefix
+        ? `${prefix}-${String(key)}`
+        : String(key),
+      () => undefined,
+    )
+  }
 }
