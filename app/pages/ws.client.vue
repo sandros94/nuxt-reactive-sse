@@ -79,7 +79,7 @@ const { states, data, status, send, open } = useWS<{
     channels: string[]
     message?: string
   }
-}>(['notifications', 'chat'])
+}>(channels)
 
 const { _internal, session } = states
 
