@@ -15,18 +15,6 @@ export default defineNuxtConfig({
     'assets/css/main.css',
   ],
 
-  runtimeConfig: {
-    public: {
-      ws: {
-        path: '_ws',
-        channels: {
-          internal: ['_internal'] as const,
-          defaults: ['notifications'] as const,
-        },
-      },
-    },
-  },
-
   future: {
     compatibilityVersion: 4,
   },
@@ -50,5 +38,12 @@ export default defineNuxtConfig({
       ttl: 10 * 60 * 60,
     },
     zlib: true,
+    ws: {
+      route: '_ws',
+      channels: {
+        internal: ['_internal'] as const,
+        defaults: ['notifications'] as const,
+      },
+    },
   },
 })

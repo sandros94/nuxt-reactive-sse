@@ -14,7 +14,7 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@sandros94/lab": "^0.0.8",
+    "@sandros94/lab": "^0.0.10",
     "h3-valibot": "^0.0.9"
   },
   "devDependencies": {

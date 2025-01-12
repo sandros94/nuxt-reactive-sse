@@ -9,7 +9,6 @@
           <UButtonGroup>
             <USelectMenu
               v-model="channels"
-              v-model:open="menuOpen"
               :items
               multiple
               class="w-48"
@@ -41,12 +40,12 @@
               {{ JSON.stringify(states['chat'].value, null, 2) }}
             </ProseCode>
             <br>
-            <ProseCode v-if="states['session']">
-              {{ JSON.stringify(states['session'].value, null, 2) }}
+            <ProseCode v-if="session">
+              {{ session }}
             </ProseCode>
             <br>
-            <ProseCode v-if="states['_internal']">
-              {{ JSON.stringify(states['_internal'].value, null, 2) }}
+            <ProseCode v-if="_internal">
+              {{ _internal }}
             </ProseCode>
             <br>
           </ProsePre>
@@ -62,30 +61,27 @@
 </template>
 
 <script setup lang="ts">
-import { randomUUID } from 'uncrypto'
-
-const items = ['session', 'chat']
-const channels = ref<string[]>(['session'])
-const menuOpen = ref(false)
-
-// just for demo purposes, should be done server-side
-const userID = randomUUID()
+const items = ['notifications', 'chat']
+const channels = ref<string[]>(['notifications'])
 
 const { states, data, status, send, open } = useWS<{
+  notifications: {
+    message: string
+  }
   chat: {
     [key: string]: string
   }
   session: {
     users: number
   }
-  notifications: {
-    message: string
-  }
   _internal: {
+    connectionId: string
     channels: string[]
     message?: string
   }
-}>(channels)
+}>(['notifications', 'chat'])
+
+const { _internal, session } = states
 
 const history = ref<string[]>([])
 watch(data, (newValue) => {
@@ -94,11 +90,16 @@ watch(data, (newValue) => {
 
 const message = ref<string>('')
 function sendData() {
-  if (!message.value || status.value !== 'OPEN' || !channels.value.includes('chat')) return
+  if (
+    !message.value
+    || !_internal.value?.connectionId
+    || status.value !== 'OPEN'
+    || !channels.value.includes('chat')
+  ) return
 
   states['chat'].value = {
     ...states['chat'].value,
-    [userID]: message.value,
+    [_internal.value.connectionId]: message.value,
   }
 
   history.value.push(`client: ${JSON.stringify({ channel: 'chat', data: states['chat'].value })}`)
