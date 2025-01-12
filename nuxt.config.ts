@@ -42,7 +42,7 @@ export default defineNuxtConfig({
       route: '_ws',
       channels: {
         internal: ['_internal'] as const,
-        defaults: ['notifications'] as const,
+        defaults: ['session'] as const,
       },
     },
   },
