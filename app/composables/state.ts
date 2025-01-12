@@ -10,6 +10,7 @@ export type StateObject<T extends Record<string, any>> = {
  * Creates multiple reactive states from an array of keys
  * @param keys Array of keys matching the generic type object
  * @param options Configuration options
+ * @param options.prefix Optional prefix for state keys
  * @returns Object containing reactive states for each key
  */
 export function useMultiState<T extends Record<string, any>>(
