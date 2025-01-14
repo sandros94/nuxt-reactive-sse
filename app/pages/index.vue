@@ -27,14 +27,15 @@
         <ProsePre>
           {{ _internal }}
         </ProsePre>
-        <Teleport to="body">
+        <div class="cursor-container">
           <span
             v-for="c of cursors"
             :key="c.user"
-            class="absolute overflow-hidden"
+            class="fixed z-50"
             :style="{
-              transform: `translate(${c.x * width}px, ${c.y * height}px)`,
+              transform: `translate(${Math.min(Math.max(c.x * width, 0), width - 20)}px, ${Math.min(Math.max(c.y * height, 0), height - 20)}px)`,
               transition: 'transform 0.1s ease-out',
+              pointerEvents: 'none',
             }"
           >
             <UIcon
@@ -42,7 +43,7 @@
               name="i-lucide-mouse-pointer-2"
             />
           </span>
-        </Teleport>
+        </div>
       </UCard>
     </UCard>
   </UContainer>
@@ -98,3 +99,15 @@ watch(notifications, () => {
   })
 })
 </script>
+
+<style scoped>
+.cursor-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  overflow: hidden;
+}
+</style>
