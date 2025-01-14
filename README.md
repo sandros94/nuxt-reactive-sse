@@ -1,5 +1,3 @@
-# Nuxt Reactive WS/SSE
+# Nuxt Reactive WS
 
-A simple example on how to use WebSockets and Server-Sent Events (SSE) to update Vue components in real-time.
-
-TODO: update SSE reactivity to match WS one.
+A simple example on how to bind WebSockets to Vue's reactivity using `@sandros94/lab`.

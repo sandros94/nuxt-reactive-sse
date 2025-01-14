@@ -9,6 +9,8 @@ export default defineNuxtConfig({
     'nuxt-auth-utils',
   ],
 
+  ssr: false,
+
   devtools: { enabled: true },
 
   css: [
@@ -34,15 +36,11 @@ export default defineNuxtConfig({
   },
 
   lab: {
-    kv: {
-      ttl: 10 * 60 * 60,
-    },
-    zlib: true,
     ws: {
       route: '_ws',
       channels: {
-        internal: ['_internal'] as const,
-        defaults: ['session'] as const,
+        internal: ['_internal', 'notifications'],
+        defaults: ['session'],
       },
     },
   },

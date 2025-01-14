@@ -4,7 +4,10 @@ export default defineEventHandler(() => {
   wsHooks.callHook('all', {
     channel: 'notifications',
     data: {
-      message: 'WS is up and running',
+      title: 'Server',
+      message: 'WebSocket is up and running!',
     },
   })
+
+  return { success: true }
 })
