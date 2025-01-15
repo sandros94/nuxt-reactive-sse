@@ -13,8 +13,8 @@ WORKDIR /app
 
 # Builder
 FROM base AS builder
-ARG ui_pro
-ENV NUXT_UI_PRO_LICENSE=$ui_pro
+ARG NUXT_UI_PRO_LICENSE
+ENV NUXT_UI_PRO_LICENSE=$NUXT_UI_PRO_LICENSE
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --shamefully-hoist

@@ -1,9 +1,5 @@
 import type { Peer } from 'crossws'
 
-interface Cursors {
-  [user: string]: { x: number, y: number }
-}
-
 export default useWebSocketHandler({
   async open(peer, { channels }) {
     // Ensure the user is uniquely identified
@@ -149,6 +145,10 @@ async function getUserId(peer: Peer) {
 }
 
 // Cursors utility functions
+
+interface Cursors {
+  [user: string]: { x: number, y: number }
+}
 
 async function getCursors() {
   return useStorage('ws').getItem<Cursors>('cursors')
