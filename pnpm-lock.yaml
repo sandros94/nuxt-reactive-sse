@@ -11,6 +11,9 @@ importers:
 
   .:
     dependencies:
+      '@iconify-json/lucide':
+        specifier: ^1.2.23
+        version: 1.2.23
       '@sandros94/lab':
         specifier: ^0.0.10
         version: 0.0.10(@nuxtjs/mdc@0.12.1(magicast@0.3.5)(rollup@4.30.1))(@unhead/vue@1.11.15(vue@3.5.13(typescript@5.7.3)))(h3-valibot@0.0.9(@nuxt/kit@3.15.1(magicast@0.3.5)(rollup@4.30.1))(@nuxt/schema@3.15.1)(valibot@0.42.1(typescript@5.7.3)))(ioredis@5.4.2)(magicast@0.3.5)(rollup@4.30.1)(typescript@5.7.3)(undio@0.2.0)(unstorage@1.14.4(db0@0.2.1)(ioredis@5.4.2))
@@ -615,6 +618,9 @@ packages:
   '@humanwhocodes/retry@0.4.1':
     resolution: {integrity: sha512-c7hNEllBlenFTHBky65mhq8WD2kbN9Q6gk0bTk8lSBvc554jpXSkST1iePudpt7+A/AQvuHs9EMqjHDXMY1lrA==}
     engines: {node: '>=18.18'}
+
+  '@iconify-json/lucide@1.2.23':
+    resolution: {integrity: sha512-UpwgsET4bCT/hj9JhPIzQjyjP81qT6CKbrqtFfj5VdBwKz/HgyU6iL5GIpk2QtjBnUkY85LR2LshKOWZubD2XQ==}
 
   '@iconify/collections@1.0.505':
     resolution: {integrity: sha512-v5sk7zCcHRcRY7y87wE0WGaZ74l328UBJzj3X6pC4VR5ao/FM7zUMpzkELXLeyVfFZWV2TZnsPKf6P7R1dXZlw==}
@@ -5450,6 +5456,10 @@ snapshots:
   '@humanwhocodes/retry@0.3.1': {}
 
   '@humanwhocodes/retry@0.4.1': {}
+
+  '@iconify-json/lucide@1.2.23':
+    dependencies:
+      '@iconify/types': 2.0.0
 
   '@iconify/collections@1.0.505':
     dependencies:
