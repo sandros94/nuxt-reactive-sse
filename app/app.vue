@@ -1,7 +1,7 @@
 <template>
   <UApp>
     <UContainer>
-      <UCard>
+      <UCard class="mt-1">
         <template #header>
           <div class="inline-flex justify-between w-full">
             <div v-if="status === 'OPEN'">
