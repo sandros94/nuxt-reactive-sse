@@ -1,5 +1,11 @@
+import { consola } from 'consola'
+
+const logger = consola.create({}).withTag('WS')
+
 export default useWebSocketHandler({
   async open(peer, { channels }) {
+    logger.log('New connection:', peer.id)
+
     // Subscribe users to requested channels (those not defined in `nuxt.config.ts`)
     for (const channel of channels) {
       peer.subscribe(channel)
@@ -70,6 +76,8 @@ export default useWebSocketHandler({
   },
 
   async close(peer) {
+    logger.log('Connection closed:', peer.id)
+
     peer.publish(
       'session',
       JSON.stringify({
@@ -103,6 +111,10 @@ export default useWebSocketHandler({
       }),
       { compress: true },
     )
+  },
+
+  error(peer, error) {
+    logger.error('Peer', peer.id, 'connection error:', error)
   },
 })
 
