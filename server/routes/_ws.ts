@@ -1,4 +1,3 @@
-import type { Storage } from 'unstorage'
 import type { Peer } from 'crossws'
 
 interface Cursors {
@@ -7,8 +6,8 @@ interface Cursors {
 
 export default useWebSocketHandler({
   async open(peer, { channels }) {
-    const cache = useStorage('ws')
-    const user = await getUserId(cache, peer)
+    // Ensure the user is uniquely identified
+    const user = await getUserId(peer)
     if (!user) {
       logger.error('Unable to uniquely identify user', { ip: peer.remoteAddress })
       peer.close(4008, 'Unable to uniquely identify user')
@@ -33,10 +32,8 @@ export default useWebSocketHandler({
       },
     }), { compress: true })
 
-    // Send the current cursor positions
-    const cursors = await cache.getItem<Cursors>('cursors') || {}
-
-    // Update everyone else
+    // Send the current cursors to the user
+    const cursors = await getCursors() || {}
     peer.send(
       JSON.stringify({
         channel: 'cursors',
@@ -73,15 +70,10 @@ export default useWebSocketHandler({
       message.json(),
     )
     if (!parsedMessage.success) return
-    const cache = useStorage('ws')
-    const user = (await getUserId(cache, peer))!
 
     // Update the cursor position
-    const cursors = await cache.getItem<Cursors>('cursors') || {}
-    cursors[user] = parsedMessage.output
-
-    // Update everyone else
-    cache.setItem('cursors', cursors)
+    const user = (await getUserId(peer))!
+    const cursors = await updateCursor(user, parsedMessage.output.x, parsedMessage.output.y)
     peer.publish(
       'cursors',
       JSON.stringify({
@@ -104,15 +96,9 @@ export default useWebSocketHandler({
       { compress: true },
     )
 
-    // Remove the user from lists
-    const cache = useStorage('ws')
-    const user = (await getUserId(cache, peer))!
-    const cursors = await cache.getItem<Cursors>('cursors') || {}
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete cursors[user]
-
-    // Update everyone else
-    cache.setItem('cursors', cursors)
+    // Remove the user from the active cursors and notify
+    const user = (await getUserId(peer))!
+    const cursors = await deleteCursor(user)
     peer.publish(
       'cursors',
       JSON.stringify({
@@ -136,7 +122,11 @@ export default useWebSocketHandler({
   },
 })
 
-async function getUserId(storage: Storage, peer: Peer) {
+// User utility functions
+
+async function getUserId(peer: Peer) {
+  const storage = useStorage('ws')
+
   if (import.meta.dev) {
     const ip = peer.id
     const id = await storage.getItem<string>(ip)
@@ -156,6 +146,33 @@ async function getUserId(storage: Storage, peer: Peer) {
   await storage.setItem(peer.remoteAddress, newId)
 
   return newId
+}
+
+// Cursors utility functions
+
+async function getCursors() {
+  return useStorage('ws').getItem<Cursors>('cursors')
+}
+
+async function updateCursor(user: string, x: number, y: number) {
+  const storage = useStorage('ws')
+
+  const cursors = await storage.getItem<Cursors>('cursors') || {}
+  cursors[user] = { x, y }
+  await storage.setItem('cursors', cursors)
+
+  return cursors
+}
+
+async function deleteCursor(user: string) {
+  const storage = useStorage('ws')
+
+  const cursors = await storage.getItem<Cursors>('cursors') || {}
+  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+  delete cursors[user]
+  await storage.setItem('cursors', cursors)
+
+  return cursors
 }
 
 function getArrayFromCursors(cursors: Cursors) {
