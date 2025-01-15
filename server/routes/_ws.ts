@@ -39,7 +39,7 @@ export default useWebSocketHandler({
     )
 
     // Update everyone's `session` state and notify
-    const data = JSON.stringify({ channel: 'session', data: { users: peer.peers.size } })
+    const data = JSON.stringify({ channel: 'session', data: { users: (await useStorage('ws:users').getKeys()).length } })
     peer.send(data, { compress: true })
     peer.publish('session', data, { compress: true })
     peer.publish(
@@ -86,7 +86,7 @@ export default useWebSocketHandler({
       JSON.stringify({
         channel: 'session',
         data: {
-          users: peer.peers.size,
+          users: (await useStorage('ws:users').getKeys()).length,
         },
       }),
       { compress: true },
@@ -95,6 +95,7 @@ export default useWebSocketHandler({
     // Remove the user from the active cursors and notify
     const user = (await getUserId(peer))!
     const cursors = await deleteCursor(user)
+    await deleteUser(user)
     peer.publish(
       'cursors',
       JSON.stringify({
@@ -121,7 +122,7 @@ export default useWebSocketHandler({
 // User utility functions
 
 async function getUserId(peer: Peer) {
-  const storage = useStorage('ws')
+  const storage = useStorage('ws:users')
 
   if (import.meta.dev) {
     const ip = peer.id
@@ -142,6 +143,12 @@ async function getUserId(peer: Peer) {
   await storage.setItem(peer.remoteAddress, newId)
 
   return newId
+}
+
+async function deleteUser(id: string) {
+  const storage = useStorage('ws:users')
+
+  return storage.removeItem(id)
 }
 
 // Cursors utility functions
