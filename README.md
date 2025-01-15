@@ -24,7 +24,7 @@ pnpm run dev
 ```
 
 ### How it Works
-1. Each client gets a unique ID stored in server storage
+1. Each client gets a unique ID and sends cursor positions to the server
 2. Server broadcasts cursor positions to all connected clients
 3. Clients render cursor positions relative to their viewport
 

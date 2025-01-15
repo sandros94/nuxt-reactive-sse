@@ -1,15 +1,5 @@
-import type { Peer } from 'crossws'
-
 export default useWebSocketHandler({
   async open(peer, { channels }) {
-    // Ensure the user is uniquely identified
-    const user = await getUserId(peer)
-    if (!user) {
-      logger.error('Unable to uniquely identify user', { ip: peer.remoteAddress })
-      peer.close(4008, 'Unable to uniquely identify user')
-      return
-    }
-
     // Subscribe users to requested channels (those not defined in `nuxt.config.ts`)
     for (const channel of channels) {
       peer.subscribe(channel)
@@ -20,7 +10,7 @@ export default useWebSocketHandler({
     peer.send(JSON.stringify({
       channel: '_internal',
       data: {
-        id: user,
+        id: peer.id,
         channels: activeChannels,
         message: activeChannels.length
           ? `Subscribed to ${activeChannels.length} channels`
@@ -39,7 +29,7 @@ export default useWebSocketHandler({
     )
 
     // Update everyone's `session` state and notify
-    const data = JSON.stringify({ channel: 'session', data: { users: (await useStorage('ws:users').getKeys()).length } })
+    const data = JSON.stringify({ channel: 'session', data: { users: peer.peers.size } })
     peer.send(data, { compress: true })
     peer.publish('session', data, { compress: true })
     peer.publish(
@@ -68,8 +58,7 @@ export default useWebSocketHandler({
     if (!parsedMessage.success) return
 
     // Update the cursor position
-    const user = (await getUserId(peer))!
-    const cursors = await updateCursor(user, parsedMessage.output.x, parsedMessage.output.y)
+    const cursors = await updateCursor(peer.id, parsedMessage.output.x, parsedMessage.output.y)
     peer.publish(
       'cursors',
       JSON.stringify({
@@ -86,16 +75,14 @@ export default useWebSocketHandler({
       JSON.stringify({
         channel: 'session',
         data: {
-          users: (await useStorage('ws:users').getKeys()).length,
+          users: peer.peers.size,
         },
       }),
       { compress: true },
     )
 
     // Remove the user from the active cursors and notify
-    const user = (await getUserId(peer))!
-    const cursors = await deleteCursor(user)
-    await deleteUser(user)
+    const cursors = await deleteCursor(peer.id)
     peer.publish(
       'cursors',
       JSON.stringify({
@@ -118,38 +105,6 @@ export default useWebSocketHandler({
     )
   },
 })
-
-// User utility functions
-
-async function getUserId(peer: Peer) {
-  const storage = useStorage('ws:users')
-
-  if (import.meta.dev) {
-    const ip = peer.id
-    const id = await storage.getItem<string>(ip)
-    if (id) return id
-
-    const newId = randomUUID()
-    await storage.setItem(ip, newId)
-
-    return newId
-  }
-  if (!peer.remoteAddress) return
-
-  const id = await storage.getItem<string>(peer.remoteAddress)
-  if (id) return id
-
-  const newId = randomUUID()
-  await storage.setItem(peer.remoteAddress, newId)
-
-  return newId
-}
-
-async function deleteUser(id: string) {
-  const storage = useStorage('ws:users')
-
-  return storage.removeItem(id)
-}
 
 // Cursors utility functions
 
