@@ -21,6 +21,10 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
 
+  experimental: {
+    buildCache: true,
+  },
+
   compatibilityDate: '2025-01-08',
 
   nitro: {
