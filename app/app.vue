@@ -63,7 +63,7 @@
 <script setup lang="ts">
 import type { ToastProps } from '#ui/types'
 
-const { states, status, _send, open } = useWS<{
+const { states, status, send, open } = useWS<{
   cursors: {
     user: string
     x: number
@@ -92,11 +92,10 @@ const { width, height } = useWindowSize()
 const { x, y, sourceType } = useMouse({ touch: false })
 watch([x, y], () => {
   if (sourceType.value === 'mouse') {
-    // Using `_send` because currently `send` only accepts sending messages to channels
-    _send(JSON.stringify({
+    send({
       x: x.value / width.value,
       y: y.value / height.value,
-    }))
+    })
   }
 })
 
