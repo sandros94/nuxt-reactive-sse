@@ -21,12 +21,12 @@
   "devDependencies": {
     "@nuxt/devtools": "2.0.0-beta.3",
     "@nuxt/eslint": "^0.7.5",
-    "@nuxt/ui-pro": "https://pkg.pr.new/@nuxt/ui-pro@65b35c5",
+    "@nuxt/ui-pro": "https://pkg.pr.new/@nuxt/ui-pro@c91955e",
     "@nuxtjs/mdc": "^0.13.1",
-    "@vueuse/nuxt": "12.4.0",
+    "@vueuse/nuxt": "12.5.0",
     "eslint": "^9.18.0",
     "nuxt": "^3.15.2",
-    "nuxt-auth-utils": "0.5.7",
+    "nuxt-auth-utils": "0.5.9",
     "typescript": "^5.7.2",
     "vue-router": "^4.5.0",
     "vue-tsc": "^2.2.0"
