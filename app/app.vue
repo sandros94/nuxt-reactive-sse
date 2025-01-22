@@ -24,6 +24,7 @@
                 v-else
                 icon="i-simple-icons-github"
                 label="Logout"
+                color="neutral"
                 @click.prevent="logout()"
               />
               <UButton
