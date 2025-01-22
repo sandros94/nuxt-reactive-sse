@@ -25,6 +25,7 @@
                 icon="i-simple-icons-github"
                 label="Logout"
                 color="neutral"
+                variant="ghost"
                 @click.prevent="logout()"
               />
               <UButton
