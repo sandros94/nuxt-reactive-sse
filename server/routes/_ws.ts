@@ -5,6 +5,10 @@ const logger = consola.create({}).withTag('WS')
 export default useWebSocketHandler({
   async open(peer, { channels }) {
     logger.log('New connection:', peer.id)
+    const session = await getUserSession(peer)
+    const _user = session.user
+      ? { login: session.user.login, avatar_url: session.user.avatar_url }
+      : undefined
 
     // Subscribe users to requested channels (those not defined in `nuxt.config.ts`)
     for (const channel of channels) {
@@ -21,6 +25,7 @@ export default useWebSocketHandler({
         message: activeChannels.length
           ? `Subscribed to ${activeChannels.length} channels`
           : 'Not subscribed to any channel',
+        user: _user,
       },
     }), { compress: true })
 
@@ -35,9 +40,9 @@ export default useWebSocketHandler({
     )
 
     // Update everyone's `session` state and notify
-    const data = JSON.stringify({ channel: 'session', data: { users: peer.peers.size } })
-    peer.send(data, { compress: true })
-    peer.publish('session', data, { compress: true })
+    const sessionData = JSON.stringify({ channel: 'session', data: { users: peer.peers.size } })
+    peer.send(sessionData, { compress: true })
+    peer.publish('session', sessionData, { compress: true })
     peer.publish(
       'notifications',
       JSON.stringify({
@@ -62,9 +67,15 @@ export default useWebSocketHandler({
       message.json(),
     )
     if (!parsedMessage.success) return
+    const session = await getUserSession(peer)
 
     // Update the cursor position
-    const cursors = await updateCursor(peer.id, parsedMessage.output.x, parsedMessage.output.y)
+    const cursors = await updateCursor(
+      peer.id,
+      parsedMessage.output.x,
+      parsedMessage.output.y,
+      session.user,
+    )
     peer.publish(
       'cursors',
       JSON.stringify({
@@ -121,29 +132,30 @@ export default useWebSocketHandler({
 // Cursors utility functions
 
 interface Cursors {
-  [user: string]: { x: number, y: number }
+  [peerId: string]: { x: number, y: number, avatar_url?: string, login?: string }
 }
 
 async function getCursors() {
   return useStorage('ws').getItem<Cursors>('cursors')
 }
 
-async function updateCursor(user: string, x: number, y: number) {
+async function updateCursor(peerId: string, x: number, y: number, user?: User) {
   const storage = useStorage('ws')
+  const { avatar_url, login } = user || {}
 
   const cursors = await storage.getItem<Cursors>('cursors') || {}
-  cursors[user] = { x, y }
+  cursors[peerId] = { x, y, avatar_url, login }
   await storage.setItem('cursors', cursors)
 
   return cursors
 }
 
-async function deleteCursor(user: string) {
+async function deleteCursor(peerId: string) {
   const storage = useStorage('ws')
 
   const cursors = await storage.getItem<Cursors>('cursors') || {}
   // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-  delete cursors[user]
+  delete cursors[peerId]
   await storage.setItem('cursors', cursors)
 
   return cursors
@@ -151,5 +163,7 @@ async function deleteCursor(user: string) {
 
 function getArrayFromCursors(cursors: Cursors) {
   const map = new Map(Object.entries(cursors))
-  return Array.from(map, ([user, { x, y }]) => ({ user, x, y }))
+  return Array.from(map,
+    ([peerId, { x, y, login, avatar_url }]) => ({ peerId, x, y, login, avatar_url }),
+  )
 }
