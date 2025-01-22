@@ -21,10 +21,10 @@ export default useWebSocketHandler({
       channel: '_internal',
       data: {
         id: peer.id,
-        channels: activeChannels,
         message: activeChannels.length
           ? `Subscribed to ${activeChannels.length} channels`
           : 'Not subscribed to any channel',
+        channels: activeChannels,
         user: _user,
       },
     }), { compress: true })
